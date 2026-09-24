@@ -7,17 +7,39 @@ CLI для работы с RSA + AES-256-CBC + ASN.1.
     python3 main.py decrypt    -i msg.enc -o msg.dec --priv rsa_private.pem
     python3 main.py sign       -i msg.txt -o msg.sig --priv rsa_private.pem [--alias testSign]
     python3 main.py verify     -i msg.txt -s msg.sig
+
+Флаг:
+    -v, --verbose   печатать полную ASN.1-структуру
 """
 
 import argparse
 import sys
+
+from pyasn1.codec.der import decoder
 
 from keys import (
     generate_keys, load_public_key, load_private_key, load_aes_key,
 )
 from enc_dec import encrypt_file, decrypt_file
 from sign import sign_file, verify_sign
+from asn1_types import EncryptedFileHeader, SignHeader
 
+
+
+def dump_asn1_file(path: str, spec_class, label: str) -> None:
+    """Читает файл, разбирает ASN.1-заголовок и печатает структуру."""
+    with open(path, 'rb') as f:
+        data = f.read()
+    header, remaining = decoder.decode(data, asn1Spec=spec_class())
+
+    print()
+    print(f"{label}")
+    print(f"Файл: {path}, размер: {len(data)} байт")
+    print(f"Заголовок: {len(data) - len(remaining)} байт, "
+          f"остаток: {len(remaining)} байт")
+    print(f"Hex (первые 64 байта): {data[:64].hex()}"
+          + ("..." if len(data) > 64 else ""))
+    print(header.prettyPrint())
 
 
 def cmd_gen_keys(args: argparse.Namespace) -> int:
@@ -36,6 +58,10 @@ def cmd_encrypt(args: argparse.Namespace) -> int:
         n, e = load_public_key(args.pub)
         aes_key = load_aes_key(args.aes)
         encrypt_file(args.input, args.output, n, e, args.alias, aes_key)
+
+        if args.verbose:
+            dump_asn1_file(args.output, EncryptedFileHeader,
+                           "ASN.1 заголовок зашифрованного файла")
     except FileNotFoundError as err:
         print(f"Ошибка: файл не найден — {err}", file=sys.stderr)
         return 1
@@ -48,6 +74,10 @@ def cmd_encrypt(args: argparse.Namespace) -> int:
 def cmd_decrypt(args: argparse.Namespace) -> int:
     """Расшифрование файла."""
     try:
+        if args.verbose:
+            dump_asn1_file(args.input, EncryptedFileHeader,
+                           "ASN.1 заголовок зашифрованного файла")
+
         n, d, e = load_private_key(args.priv)
         decrypt_file(args.input, args.output, n, d)
     except FileNotFoundError as err:
@@ -64,6 +94,10 @@ def cmd_sign(args: argparse.Namespace) -> int:
     try:
         n, d, e = load_private_key(args.priv)
         sign_file(args.input, args.output, n, d, e, args.alias)
+
+        if args.verbose:
+            dump_asn1_file(args.output, SignHeader,
+                           "ASN.1 файл подписи")
     except FileNotFoundError as err:
         print(f"Ошибка: файл не найден — {err}", file=sys.stderr)
         return 1
@@ -76,6 +110,10 @@ def cmd_sign(args: argparse.Namespace) -> int:
 def cmd_verify(args: argparse.Namespace) -> int:
     """Проверка подписи."""
     try:
+        if args.verbose:
+            dump_asn1_file(args.sign, SignHeader,
+                           "ASN.1 файл подписи")
+
         ok = verify_sign(args.input, args.sign)
     except FileNotFoundError as err:
         print(f"Ошибка: файл не найден — {err}", file=sys.stderr)
@@ -131,6 +169,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help='файл AES-ключа (по умолчанию случайный)')
     p.add_argument('--alias', default='test',
                    help="псевдоним ключа (по умолчанию 'test')")
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
     p.set_defaults(func=cmd_encrypt)
 
     # decrypt
@@ -141,6 +181,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help='выходной расшифрованный файл')
     p.add_argument('--priv', required=True,
                    help='файл закрытого ключа RSA')
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
     p.set_defaults(func=cmd_decrypt)
 
     # sign
@@ -153,6 +195,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help='файл закрытого ключа RSA')
     p.add_argument('--alias', default='testSign',
                    help="псевдоним ключа (по умолчанию 'testSign')")
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
     p.set_defaults(func=cmd_sign)
 
     # verify
@@ -161,6 +205,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help='проверяемый файл')
     p.add_argument('-s', '--sign', required=True,
                    help='файл подписи')
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
     p.set_defaults(func=cmd_verify)
 
     return parser
