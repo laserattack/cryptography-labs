@@ -1,3 +1,4 @@
+import sys
 from math import gcd
 
 
@@ -74,38 +75,18 @@ def wiener_attack(n, e):
     return None
 
 
-def test():
-    import random
-    from math import gcd, isqrt
-    from sympy import nextprime
+# python3 wiener.py 135500873554643875002806215483549329999778558582066024516617219257820244473643623125033562403023329148579482869336227692655681932361339430602190334559680132238309319034085163192839127646013709026649891818111147322576762740829064345307336200428311824824482196068851251057207419004943197621130269162181550911947 115381201466408055139679810937010661894687005976025005819153986067493503626348315332803284771214794674217472743070358921165108019923952051161314408739239022977272143909377684394535624269980970706749808526202389334610349826143025686695029152524020978484398780561991765892084757242840845222641150942382122091831
+def main():
+    if len(sys.argv) != 3:
+        print("Использование: python3 wiener.py <n> <e>")
+        return
 
-    # Генерируем p, q
-    p = nextprime(random.getrandbits(512))
-    q = nextprime(random.getrandbits(512))
-    n = p * q
-    phi = (p - 1) * (q - 1)
+    n = int(sys.argv[1])
+    e = int(sys.argv[2])
 
-    # Маленькое d, взаимно простое с phi
-    d = random.getrandbits(64) | 1   # нечётное, ~64 бита
-    while gcd(d, phi) != 1:  # должны быть взаимнопростые иначе e не существует
-        d = random.getrandbits(64) | 1
-
-    # e = d^{-1} mod phi
-    e = pow(d, -1, phi)
-
-    print(f"n = {n.bit_length()} бит")
-    print(f"e = {e.bit_length()} бит")
-    print(f"d = {d.bit_length()} бит")
-
-    # граница Винера: d < n^(1/4) / 3
-    bound = isqrt(isqrt(n)) // 3
-    print(f"граница Винера: d < {bound.bit_length()} бит")
-    print(f"применимо: {d < bound}")
-
-    # Атака
-    d_found = wiener_attack(n, e)
-    print(f"d найден: {d_found == d}")
+    d = wiener_attack(n, e)
+    print(f"d = {d}")
 
 
 if __name__ == '__main__':
-    test()
+    main()
