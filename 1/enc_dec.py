@@ -192,6 +192,9 @@ def decrypt_file(input_file: str,
     print(f"Расшифрованный файл: {output_file}")
 
 
+# Тест
+
+
 def test():
     import os
     from Crypto.PublicKey import RSA

@@ -162,6 +162,9 @@ def verify_sign(input_file: str,
         return False
 
 
+# Тест
+
+
 def test():
     import os
     from Crypto.PublicKey import RSA
