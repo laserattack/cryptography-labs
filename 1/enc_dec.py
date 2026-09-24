@@ -196,39 +196,41 @@ def test():
     import os
     from Crypto.PublicKey import RSA
 
-    # RSA-2048
-    print("Генерация RSA-2048...")
-    key = RSA.generate(2048)
-    n, e, d = key.n, key.e, key.d
+    try:
+        # RSA-2048
+        print("Генерация RSA-2048...")
+        key = RSA.generate(2048)
+        n, e, d = key.n, key.e, key.d
 
-    # Сообщение
-    msg = "Это тестовое сообщение для RSA + AES-256-CBC + ASN.1.".encode('utf-8')
-    with open('msg.txt', 'wb') as f:
-        f.write(msg)
-    print(f"Сообщение: {len(msg)} байт")
+        # Сообщение
+        msg = "Это тестовое сообщение для RSA + AES-256-CBC + ASN.1.".encode('utf-8')
+        with open('msg.txt', 'wb') as f:
+            f.write(msg)
+        print(f"Сообщение: {len(msg)} байт")
 
-    # AES256-ключ (32 байта)
-    aes_key = os.urandom(32)
-    print(f"AES-256 ключ: {aes_key.hex()}")
+        # AES256-ключ (32 байта)
+        aes_key = os.urandom(32)
+        print(f"AES-256 ключ: {aes_key.hex()}")
 
-    # Шифруем
-    encrypt_file('msg.txt', 'msg.enc', n, e, key_alias='test', aes_key=aes_key)
+        # Шифруем
+        encrypt_file('msg.txt', 'msg.enc', n, e, key_alias='test', aes_key=aes_key)
 
-    # Расшифровываем
-    decrypt_file('msg.enc', 'msg.dec', n, d)
+        # Расшифровываем
+        decrypt_file('msg.enc', 'msg.dec', n, d)
 
-    # Сверяем
-    with open('msg.txt', 'rb') as f:  orig = f.read()
-    with open('msg.dec', 'rb') as f:  dec  = f.read()
+        # Сверяем
+        with open('msg.txt', 'rb') as f:  orig = f.read()
+        with open('msg.dec', 'rb') as f:  dec  = f.read()
 
-    print(f"Исходное: {orig!r}")
-    print(f"Расшифровано: {dec!r}")
-    print(f"Совпадает: {orig == dec}")
+        print(f"Исходное: {orig!r}")
+        print(f"Расшифровано: {dec!r}")
+        print(f"Совпадает: {orig == dec}")
 
-    for fname in ('msg.txt', 'msg.enc', 'msg.dec'):
-        if os.path.exists(fname):
-            os.remove(fname)
-            print(f"Удалён: {fname}")
+    finally:
+        for fname in ('msg.txt', 'msg.enc', 'msg.dec'):
+            if os.path.exists(fname):
+                os.remove(fname)
+                print(f"Удалён: {fname}")
 
 
 if __name__ == '__main__':
