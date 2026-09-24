@@ -2,11 +2,13 @@
 CLI для работы с RSA + AES-256-CBC + ASN.1.
 
 Использование:
-    python3 main.py gen-keys   --bits 2048 --priv rsa_private.pem --pub rsa_public.pem --aes aes_key.bin
-    python3 main.py encrypt    -i msg.txt -o msg.enc --pub rsa_public.pem [--aes aes_key.bin] [--alias test]
-    python3 main.py decrypt    -i msg.enc -o msg.dec --priv rsa_private.pem
-    python3 main.py sign       -i msg.txt -o msg.sig --priv rsa_private.pem [--alias testSign]
-    python3 main.py verify     -i msg.txt -s msg.sig
+    python3 main.py gen-keys      --bits 2048 --priv rsa_private.pem --pub rsa_public.pem --aes aes_key.bin
+    python3 main.py encrypt       -i msg.txt -o msg.enc --pub rsa_public.pem [--aes aes_key.bin] [--alias test]
+    python3 main.py decrypt       -i msg.enc -o msg.dec --priv rsa_private.pem
+    python3 main.py sign          -i msg.txt -o msg.sig --priv rsa_private.pem [--alias testSign]
+    python3 main.py verify        -i msg.txt -s msg.sig
+    python3 main.py sign-crc32    -i msg.txt -o msg.sig --priv rsa_private.pem
+    python3 main.py verify-crc32  -i msg.txt -s msg.sig
 
 Флаг:
     -v, --verbose   печатать полную ASN.1-структуру
@@ -22,6 +24,7 @@ from keys import (
 )
 from enc_dec import encrypt_file, decrypt_file
 from sign import sign_file, verify_sign
+from sign_crc32 import sign_file as sign_crc32, verify_sign as verify_crc32
 from asn1_types import EncryptedFileHeader, SignHeader
 
 
@@ -125,6 +128,42 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if ok else 2
 
 
+def cmd_sign_crc32(args: argparse.Namespace) -> int:
+    """Подписание файла (RSA-CRC32)."""
+    try:
+        n, d, e = load_private_key(args.priv)
+        sign_crc32(args.input, args.output, n, d, e, args.alias)
+
+        if args.verbose:
+            dump_asn1_file(args.output, SignHeader,
+                           "ASN.1 файл подписи (CRC32)")
+    except FileNotFoundError as err:
+        print(f"Ошибка: файл не найден — {err}", file=sys.stderr)
+        return 1
+    except Exception as err:
+        print(f"Ошибка: {type(err).__name__}: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_verify_crc32(args: argparse.Namespace) -> int:
+    """Проверка подписи (RSA-CRC32)."""
+    try:
+        if args.verbose:
+            dump_asn1_file(args.sign, SignHeader,
+                           "ASN.1 файл подписи (CRC32)")
+
+        ok = verify_crc32(args.input, args.sign)
+    except FileNotFoundError as err:
+        print(f"Ошибка: файл не найден — {err}", file=sys.stderr)
+        return 1
+    except Exception as err:
+        print(f"Ошибка: {type(err).__name__}: {err}", file=sys.stderr)
+        return 1
+
+    return 0 if ok else 2
+
+
 # Парсер
 
 
@@ -140,10 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
             "python3 main.py decrypt -i msg.enc -o msg.dec --priv rsa_private.pem\n"
             "python3 main.py sign    -i msg.txt -o msg.sig --priv rsa_private.pem\n"
             "python3 main.py verify  -i msg.txt -s msg.sig\n"
+            "python3 main.py sign-crc32   -i msg.txt -o msg.sig --priv rsa_private.pem\n"
+            "python3 main.py verify-crc32 -i msg.txt -s msg.sig\n"
         ),
     )
     sub = parser.add_subparsers(dest='command', required=True,
-                                metavar='{gen-keys,encrypt,decrypt,sign,verify}')
+                                metavar='{gen-keys,encrypt,decrypt,sign,verify,sign-crc32,verify-crc32}')
 
     # gen-keys
     p = sub.add_parser('gen-keys', help='генерация ключей RSA + AES')
@@ -208,6 +249,30 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument('-v', '--verbose', action='store_true',
                    help='печатать полную ASN.1-структуру')
     p.set_defaults(func=cmd_verify)
+
+    # sign-crc32
+    p = sub.add_parser('sign-crc32', help='подписание файла (RSA-CRC32)')
+    p.add_argument('-i', '--input', required=True,
+                   help='файл для подписи')
+    p.add_argument('-o', '--output', required=True,
+                   help='выходной файл подписи')
+    p.add_argument('--priv', required=True,
+                   help='файл закрытого ключа RSA')
+    p.add_argument('--alias', default='testSign',
+                   help="псевдоним ключа (по умолчанию 'testSign')")
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
+    p.set_defaults(func=cmd_sign_crc32)
+
+    # verify-crc32
+    p = sub.add_parser('verify-crc32', help='проверка подписи (RSA-CRC32)')
+    p.add_argument('-i', '--input', required=True,
+                   help='проверяемый файл')
+    p.add_argument('-s', '--sign', required=True,
+                   help='файл подписи')
+    p.add_argument('-v', '--verbose', action='store_true',
+                   help='печатать полную ASN.1-структуру')
+    p.set_defaults(func=cmd_verify_crc32)
 
     return parser
 
