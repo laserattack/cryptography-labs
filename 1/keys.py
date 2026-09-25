@@ -50,8 +50,13 @@ def generate_keys(bits: int = 2048,
     print(f"AES-256: {aes_key_file}")
     print(f"Ключ: {aes_key.hex()}")
 
+    phi = (key.p - 1) * (key.q - 1)
+
     print(f"n: {key.n.bit_length()} бит")
     print(f"e: {key.e}")
+    print(f"p: {key.p}")
+    print(f"q: {key.q}")
+    print(f"phi: {phi}")
 
 
 #  Загрузка

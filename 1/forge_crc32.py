@@ -81,10 +81,10 @@ class CRCForger:
 def main():
     if len(sys.argv) != 5:
         print("Использование: python3 forge_crc32.py <d1> <d2> <sig> <d3>")
-        print("d1  — исходный документ (Д-1)")
-        print("d2  — изменённый документ (Д-2)")
-        print("sig — файл подписи ЭП-1 (не используется)")
-        print("d3  — выходной документ (Д-3)")
+        print("d1  — исходный документ")
+        print("d2  — изменённый документ")
+        print("sig — файл подписи (не используется)")
+        print("d3  — выходной документ")
         return
 
     d1_path, d2_path, sig_path, d3_path = sys.argv[1:5]
@@ -97,10 +97,10 @@ def main():
     target = zlib.crc32(d1) & 0xFFFFFFFF
     current = zlib.crc32(d2) & 0xFFFFFFFF
 
-    print(f"Д-1: {d1_path}")
-    print(f"  размер: {len(d1)} байт, CRC32 = {target:08x}")
-    print(f"Д-2: {d2_path}")
-    print(f"  размер: {len(d2)} байт, CRC32 = {current:08x}")
+    print(f"Исходный документ: {d1_path}")
+    print(f"размер: {len(d1)} байт, CRC32 = {target:08x}")
+    print(f"Целевой документ: {d2_path}")
+    print(f"размер: {len(d2)} байт, CRC32 = {current:08x}")
     print(f"Целевой CRC32: {target:08x}")
     print()
 
@@ -115,9 +115,9 @@ def main():
 
     # Проверка
     result = zlib.crc32(d3) & 0xFFFFFFFF
-    print(f"CRC32(Д-3) = {result:08x}")
-    print(f"Совпадает:  {result == target}")
-    print(f"Д-3: {d3_path}")
+    print(f"CRC32(Целевой документ) = {result:08x}")
+    print(f"Совпадает: {result == target}")
+    print(f"Целевой документ: {d3_path}")
 
 
 if __name__ == "__main__":
