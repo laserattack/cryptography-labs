@@ -20,6 +20,8 @@ def continued_fraction(num, den):
         cf.append(q)
         # num <- 19; den <- 43 - 2 * 19 = 5
         num, den = den, num - q * den
+
+    print(f"Коэффициенты цепной дроби: {cf}")
     return cf
 
 
@@ -63,6 +65,8 @@ def wiener_attack(n, e):
         if k == 0:
             continue
 
+        print(f"Подходящая дробь (k/d): {k}/{d}")
+
         # и проверка через расшифрование просто, т.е. берется какое то
         # сообщение, зашифровывается и если далее корректно
         # расшифровалось то все ок
@@ -70,6 +74,7 @@ def wiener_attack(n, e):
         # проверка: (m^e)^d ≡ m (mod n)
         m = 2
         if pow(pow(m, e, n), d, n) == m % n:
+            print ("Проверка (m^e)^d ≡ m (mod n) пройдена, d найден")
             return d
 
     return None
