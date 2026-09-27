@@ -53,7 +53,7 @@ class Signature(univ.Sequence):
 class KeyInfo(univ.Sequence):
     """Одна последовательность ключа."""
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('algorithm', univ.OctetString()), # дентификатор алгоритма
+        namedtype.NamedType('algorithm', univ.OctetString()), # идентификатор алгоритма
         namedtype.NamedType('keyAlias', char.UTF8String()),   # название ключа
         namedtype.NamedType('publicKey', PublicKey()),        # открытый ключ
         namedtype.NamedType('parameters', SystemParams()),    # параметры криптосистемы
@@ -71,3 +71,6 @@ class SignatureHeader(univ.Sequence):
         namedtype.NamedType('keys', KeySet()),            # ножество ключей
         namedtype.NamedType('fileInfo', univ.Sequence()), # параметры файла, не используются
     )
+
+
+ALG_GOST_SIGN = b'\x80\x06\x07\x00'  # идентификатор алгоритма
