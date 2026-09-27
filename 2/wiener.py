@@ -58,6 +58,7 @@ def wiener_attack(n, e):
     cf = continued_fraction(e, n)
 
     # идем по подходящим дробям
+    # d (закрытый показатель) будет среди знаменателей подходящих дробей
     for k, d in convergents(cf):
 
         if d == 0:

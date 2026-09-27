@@ -30,14 +30,14 @@ class CRCForger:
         for i in range(256):
             fwd, rev = i, i << 24
             for _ in range(8):
-                # прямая таблица
+                # прямая таблица (отв на вопрос: Если текущее состояние CRC обработать байтом b, что получится?)
                 if (fwd & 1) == 1:
                     fwd = (fwd >> 1) ^ self.polynomial
                 else:
                     fwd >>= 1
                 self.crc32_table[i] = fwd & 0xFFFFFFFF
 
-                # обратная таблица
+                # обратная таблица (отв на вопрос: Зная состояние CRC после обработки байта, каким был этот байт и состояние до?)
                 if rev & 0x80000000 == 0x80000000:
                     rev = ((rev ^ self.polynomial) << 1) | 1
                 else:

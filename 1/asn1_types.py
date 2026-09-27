@@ -17,6 +17,21 @@ class RSAPublicKey(univ.Sequence):
 
 # Файл шифрования
 
+# 0:d=0  hl=4 l= 564 cons: SEQUENCE                   ← заголовок целиком
+# 4:d=1  hl=4 l= 550 cons:  SET                       ← keys (SET OF)
+# 8:d=2  hl=4 l= 546 cons:   SEQUENCE                 ← RSAKeyInfo
+# 12:d=3 hl=2 l=   2 prim:    OCTET STRING :00 01     ← algorithm = RSA
+# 16:d=3 hl=2 l=   4 prim:    UTF8STRING :test        ← keyAlias
+# 22:d=3 hl=4 l= 266 cons:    SEQUENCE                ← publicKey
+# 26:d=4 hl=4 l= 257 prim:     INTEGER  :B26E4A...    ← modulus (n)
+# 287:d=4 hl=2 l=   3 prim:    INTEGER  :010001       ← publicExponent = 65537
+# 292:d=3 hl=2 l=   0 cons:   SEQUENCE                ← parameters (пусто)
+# 294:d=3 hl=4 l= 260 cons:   SEQUENCE                ← ciphertext
+# 298:d=4 hl=4 l= 256 prim:    INTEGER :2ED1C7...     ← c = k^e mod n
+# 558:d=1 hl=2 l=   8 cons: SEQUENCE                  ← fileInfo
+# 560:d=2 hl=2 l=   2 prim:  OCTET STRING :10 82      ← algorithm = AES-256-CBC
+# 564:d=2 hl=2 l=   2 prim:  INTEGER :027D            ← fileLength = 637
+
 
 class RSACiphertext(univ.Sequence):
     """
@@ -87,6 +102,19 @@ class EncryptedFileHeader(univ.Sequence):
 
 
 # Файл подписи
+
+# 0:d=0   SEQUENCE                    ← заголовок (SignHeader)
+# 4:d=1    SET                        ← keys (SET OF SignRSAKeyInfo)
+# 8:d=2     SEQUENCE                  ← SignRSAKeyInfo
+# 12:d=3     OCTET STRING :00 40      ← algorithm = RSA-SHA256
+# 16:d=3     UTF8STRING :testSign     ← keyAlias
+# 22:d=3     SEQUENCE                 ← publicKey
+# 26:d=4      INTEGER :B26E4A...      ← modulus (n)
+# 287:d=4     INTEGER :010001         ← publicExponent = 65537
+# 292:d=3    SEQUENCE                 ← parameters (пусто)
+# 294:d=3    SEQUENCE                 ← signature
+# 298:d=4     INTEGER :...            ← s = h^d mod n
+# 558:d=1  SEQUENCE                   ← fileInfo (пусто)
 
 
 class SignRSASignature(univ.Sequence):
