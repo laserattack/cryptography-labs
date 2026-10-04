@@ -38,7 +38,7 @@ class SystemParams(univ.Sequence):
         namedtype.NamedType('field', FieldParams()),         # параметры поля
         namedtype.NamedType('curve', CurveParams()),         # параметры кривой
         namedtype.NamedType('generator', GeneratorParams()), # образующая группы точек кривой
-        namedtype.NamedType('order', univ.Integer()),        # порядок группы q
+        namedtype.NamedType('order', univ.Integer()),        # простой делитель порядка группы точек m
     )
 
 
