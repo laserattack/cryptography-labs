@@ -54,16 +54,16 @@ def sign(message: bytes, d: int) -> tuple[int, int]:
     """
     Формирование подписи по ГОСТ Р 34.10-2018.
     """
-    e = hash_message(message)
+    e = hash_message(message)  # Хэш приведённый по модулю q с заменой нуля на единицу
 
     while True:
-        k = random.randint(1, q - 1)
-        C = scalar_mul(k, P, a, p)
-        r = C.x % q
+        k = random.randint(1, q - 1) # Вырабатывает случайный показатель 𝑘
+        C = scalar_mul(k, P, a, p)   # Вычисляет точку 𝐶 ← 𝑘𝑃
+        r = C.x % q                  # 𝑟 ≡ С.x (𝑚𝑜𝑑 𝑞)
         if r == 0:
             continue
 
-        s = (r * d + k * e) % q
+        s = (r * d + k * e) % q      # 𝑠 ← (𝑟𝑑 + 𝑘𝑒)
         if s == 0:
             continue
 
@@ -77,11 +77,12 @@ def verify(message: bytes, r: int, s: int, Q: ECPoint) -> bool:
     if not (0 < r < q and 0 < s < q):
         return False
 
-    e = hash_message(message)
-    v = mod_inv(e, q)
-    z1 = (s * v) % q
-    z2 = (-r * v) % q
+    e = hash_message(message)  # Хэш приведённый по модулю q с заменой нуля на единицу
+    v = mod_inv(e, q)          # Обратное e по модулю q
+    z1 = (s * v) % q           # 𝑧1 ≡ 𝑠𝑣(𝑚𝑜𝑑 𝑞)
+    z2 = (-r * v) % q          # 𝑧2 ≡ −𝑟𝑣(𝑚𝑜𝑑 𝑞)
 
+    # 𝐶 = 𝑧1𝑃 + 𝑧2𝑄
     C = add_points(
         scalar_mul(z1, P, a, p),
         scalar_mul(z2, Q, a, p),
@@ -91,7 +92,9 @@ def verify(message: bytes, r: int, s: int, Q: ECPoint) -> bool:
     if C.is_infinity:
         return False
 
+    # 𝑅 ≡ C.x (𝑚𝑜𝑑 𝑞)
     R = C.x % q
+
     return R == r
 
 
