@@ -174,21 +174,31 @@ def run_client(filename: str, config: dict) -> bool:
         # 5. Отправка Message1
         print("[4] Отправка Message1 (a^x, p, a)...")
         msg1 = build_message1(p, a, A)
-        send_data(sock, encoder.encode(msg1))
+        msg1_der = encoder.encode(msg1)
+        with open('msg1.asn1', 'wb') as f:
+            f.write(msg1_der)
+        print(f"Message1 сохранён: msg1.asn1 ({len(msg1_der)} байт)")
+        send_data(sock, msg1_der)
 
         # 6. Получение Message2
         print("[5] Ожидание Message2 (a^y)...")
         data = recv_data(sock)
         if data is None:
-            print("    Ошибка: сервер закрыл соединение")
+            print("Ошибка: сервер закрыл соединение")
             return False
+
+        # сохранить в файл
+        with open('msg2.asn1', 'wb') as f:
+            f.write(data)
+        print(f"Message2 сохранён: msg2.asn1 ({len(data)} байт)")
+
         B = parse_message2(data)
         print(f"a^y = {hex(B)}")
 
         # 7. Общий секрет
         print("[6] Вычисление K = (a^y)^x mod p...")
         K = compute_shared(B, x, p)
-        print(f"    K = {hex(K)}")
+        print(f"K = {hex(K)}")
 
         # 8. AES-ключ
         print("[7] Получение ключа AES: K mod 2^256...")
@@ -206,6 +216,11 @@ def run_client(filename: str, config: dict) -> bool:
         print("[9] Отправка Message3 + IV + шифртекст...")
         msg3 = build_message3(original_length)
         header_der = encoder.encode(msg3)
+
+        # сохранить ASN.1-заголовок в файл
+        with open('msg3.asn1', 'wb') as f:
+            f.write(header_der)
+        print(f"Message3 сохранён: msg3.asn1 ({len(header_der)} байт)")
 
         # Заголовок || IV || шифртекст
         payload = header_der + iv + ciphertext
