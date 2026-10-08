@@ -243,9 +243,8 @@ def ecm_factor(n, m=10_000, max_curves=100, verbose=True,
     return None, time.perf_counter() - t_start, total_mul
 
 
-# ============================================================
 #  CLI
-# ============================================================
+
 
 def main():
     if len(sys.argv) < 2:
@@ -263,7 +262,7 @@ def main():
     print(f"[*] m = {m}")
     print(f"[*] max_curves = {max_curves}")
 
-    d, elapsed, total_mul = ecm_factor(n, m=m, max_curves=max_curves)
+    d, elapsed, total_mul = ecm_factor(n, m=m, max_curves=max_curves, verbose=True, report_every=300.0)
 
     if d is None:
         print("[!] Делитель не найден")
@@ -283,5 +282,6 @@ def main():
 
 
 # python3 ecm.py 1191515026104746183243378937330489098579 1000000 1000
+# python3 ecm.py 661643 1000 100
 if __name__ == '__main__':
     main()
